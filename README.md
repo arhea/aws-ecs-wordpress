@@ -1,14 +1,30 @@
-# Welcome to your CDK TypeScript project!
+# Wordpress on Amazon ECS Fargate
 
-This is a blank project for TypeScript development with CDK.
+This repository uses the [AWS Cloud Development Kit](https://aws.amazon.com/cdk/) (CDK) to deploy a highly available Wordpress installation on [AWS Fargate](https://aws.amazon.com/fargate/) on [Amazon ECS](https://aws.amazon.com/ecs/). This will provision a VPC, ECS Cluster, EFS Filesystem, Secrets, Aurora, and Wordpress Containers.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+![Wordpress Architecture](./docs/architecture.png)
 
-## Useful commands
+To deploy Wordpress we use the official [Wordpress container image](https://hub.docker.com/_/wordpress) available on Docker hub. This image is configured using a volume mount for persistent storage and a series of envrionment variables from AWS Secrets Manager.
 
- * `npm run build`   compile typescript to js
- * `npm run watch`   watch for changes and compile
- * `npm run test`    perform the jest unit tests
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk synth`       emits the synthesized CloudFormation template
+Wordpress has shared resources such as plugins, themes, and uploads that all containers need access to in order to function properly. To facilitate this storage, we provision an Amazon Elastic Filesystem (EFS) filesystem that is attached to all of the containers running.
+
+Next, we use AWS Secrets Manager to store database credentials for the Aurora MySQL Database and to generate the [Wordpress Salts](https://api.wordpress.org/secret-key/1.1/salt/). These also need to be mounted to every container.
+
+## Usage
+
+This repository is built on AWS Cloud Development Kit (CDK). For full guidance on using the CDK, see the CDK documentation.
+
+```bash
+# install the depdencies
+npm install
+
+# deploy the stack
+cdk deploy
+
+# destroy the stack
+cdk destroy
+```
+
+## License
+
+This library is licensed under the MIT-0 License. See the [LICENSE file](./LICENSE).
