@@ -1,19 +1,20 @@
-import * as cdk from '@aws-cdk/core';
-import * as ec2 from '@aws-cdk/aws-ec2';
-import * as ecs from '@aws-cdk/aws-ecs';
-import * as ecsPatterns from '@aws-cdk/aws-ecs-patterns';
-import * as efs from '@aws-cdk/aws-efs';
-import * as rds from '@aws-cdk/aws-rds';
-import * as secretsManager from '@aws-cdk/aws-secretsmanager'
-import * as iam from '@aws-cdk/aws-iam';
+import * as cdk from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as ecs from 'aws-cdk-lib/aws-ecs';
+import * as ecsPatterns from 'aws-cdk-lib/aws-ecs-patterns';
+import * as efs from 'aws-cdk-lib/aws-efs';
+import * as rds from 'aws-cdk-lib/aws-rds';
+import * as secretsManager from 'aws-cdk-lib/aws-secretsmanager'
+import * as iam from 'aws-cdk-lib/aws-iam';
 
 export class AwsEcsWordpressStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
     // create the vpc
     const vpc = new ec2.Vpc(this, 'VPC');
-
+    
     // create the ecs cluster
     const cluster = new ecs.Cluster(this, 'Cluster', {
       vpc,
@@ -93,19 +94,20 @@ export class AwsEcsWordpressStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY
     });
 
+    let clusterEngine = rds.DatabaseClusterEngine.auroraMysql({
+      version: rds.AuroraMysqlEngineVersion.VER_3_03_0
+    });
+
     // create the aurora mysql database
     const db = new rds.DatabaseCluster(this, 'Database', {
-      engine: rds.DatabaseClusterEngine.AURORA_MYSQL,
+      engine: clusterEngine,
       defaultDatabaseName: 'wordpress',
-      masterUser: {
+      credentials: {
         username: 'admin',
         password: cdk.SecretValue.secretsManager(secretDatabaseCredentials.secretArn)
       },
       instanceProps: {
         vpc,
-        vpcSubnets: {
-          subnetType: ec2.SubnetType.PRIVATE,
-        },
         instanceType: ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE3, ec2.InstanceSize.MEDIUM),
       },
       removalPolicy: cdk.RemovalPolicy.DESTROY
@@ -169,7 +171,7 @@ export class AwsEcsWordpressStack extends cdk.Stack {
 
     // add the container to the task definition
     const container = taskDef.addContainer('Wordpress', {
-      image: ecs.ContainerImage.fromRegistry('wordpress:5.5-apache'),
+      image: ecs.ContainerImage.fromRegistry('wordpress:6.2.0-apache'),
       logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'Wordpress' }),
       memoryLimitMiB: 1024,
       cpu: 512,
