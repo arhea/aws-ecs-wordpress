@@ -219,7 +219,7 @@ export class AwsEcsWordpressStack extends cdk.Stack {
 
     wordpress.targetGroup.configureHealthCheck({
       enabled: true,
-      path: '/index.php',
+      path: '/',
       healthyHttpCodes: '200,201,302',
       interval: cdk.Duration.seconds(15),
       timeout: cdk.Duration.seconds(10),
