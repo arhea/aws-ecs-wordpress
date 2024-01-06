@@ -171,7 +171,7 @@ export class AwsEcsWordpressStack extends cdk.Stack {
 
     // add the container to the task definition
     const container = taskDef.addContainer('Wordpress', {
-      image: ecs.ContainerImage.fromRegistry('wordpress:6.2.0-apache'),
+      image: ecs.ContainerImage.fromRegistry('wordpress:6.4.2-apache'),
       logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'Wordpress' }),
       memoryLimitMiB: 1024,
       cpu: 512,
